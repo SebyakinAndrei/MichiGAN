@@ -24,7 +24,7 @@ import torch
 import time
 import math
 import numpy as np
-from scipy.misc import imresize
+#from scipy.misc import imresize
 from ui_util import cal_orient_stroke
 
 color_list = [QColor(0, 0, 0), QColor(255, 255, 255), QColor(76, 153, 0), QColor(204, 204, 0), QColor(51, 51, 255), QColor(204, 0, 204), QColor(0, 255, 255), QColor(51, 255, 255), QColor(102, 51, 0), QColor(255, 0, 0), QColor(102, 204, 0), QColor(255, 255, 0), QColor(0, 0, 153), QColor(0, 0, 204), QColor(255, 51, 153), QColor(0, 204, 204), QColor(0, 51, 0), QColor(255, 153, 51), QColor(0, 204, 0)]

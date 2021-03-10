@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'>
+
+	<link rel="stylesheet" href="web/css/reset.css"> <!-- CSS reset -->
+	<link rel="stylesheet" href="web/css/style.css"> <!-- Resource style -->
+	<script src="web/js/modernizr.js"></script> <!-- Modernizr -->
+
+	<title>Hair Factory</title>
+</head>
+<body>
+	<header>
+		<h1>BloomAI Hair Factory</h1>
+	</header>
+    <label class="file_upload">
+        <span class="button">Choose</span>
+        <mark>Reference image is not chosen</mark>
+        <input id="ref-img" type="file">
+    </label>
+	<label class="file_upload">
+        <span class="button">Choose</span>
+        <mark>Reference mask is not chosen</mark>
+        <input id="mask-img" type="file">
+    </label>
+	<label class="file_upload">
+        <span class="button">Choose</span>
+        <mark>Target image is not chosen</mark>
+        <input id="mask-img" type="file">
+    </label>
+	<label class="file_upload">
+        <span class="button">Choose</span>
+        <mark>Target mask is not chosen</mark>
+        <input id="mask-img" type="file">
+    </label>
+	<button class="file_upload">Process</button>
+	<p style="text-align: center;">
+		<img src="web/img/4_3_1.jpg"/>
+	</p>
+    <div id="img-cont" style="text-align: center; padding: 20px;">
+        <figure class="cd-image-container">
+            <img id="img1" src="" alt="Original Image">
+            <span class="cd-image-label" style="padding-bottom: 60px;" data-type="original">Ours</span>
+            <span id="imlabel1" class="cd-image-label" data-type="original">Ours</span>
+
+            <div class="cd-resize-img"> <!-- the resizable image on top -->
+                <img id="img2" src="" alt="Modified Image">
+                <span class="cd-image-label" style="padding-bottom: 60px;" data-type="modified">JPEG</span>
+                <span id="imlabel2" class="cd-image-label" data-type="modified">JPEG</span>
+            </div>
+
+            <span class="cd-handle"></span>
+        </figure> <!-- cd-image-container -->
+    </div>
+    <div style="text-align: center;">
+        <div class="lds-grid">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+<script src="web/js/jquery-2.1.1.js"></script>
+<script src="web/js/jquery.mobile.custom.min.js"></script> <!-- Resource jQuery -->
+<script src="web/js/main.js"></script> <!-- Resource jQuery -->
+<script>
+    $(function() {
+        $('#img-cont').hide();
+        $('.lds-grid').hide();
+        var wrapper = $(".file_upload"),
+            inp = wrapper.find("input"),
+            btn = wrapper.find(".button"),
+            lbl = wrapper.find("mark");
+
+		let mask_image =
+
+        // Crutches for the :focus style:
+        inp.focus(function(){
+            wrapper.addClass( "focus" );
+        }).blur(function(){
+            wrapper.removeClass( "focus" );
+        });
+
+        inp.change(function(){
+            var file_name;
+            if(inp[0].files[0] ) {
+                file_name = inp[0].files[0].name;
+            }
+			else {
+				propmt('Something bad happened to input')
+			}
+
+            if(!file_name.length )
+                return;
+
+            if(lbl.is( ":visible")){
+                lbl.text(file_name);
+                btn.text("Выбрать");
+                console.log('OK1');
+
+                var url = 'http://127.0.0.1:4000/upload';//'http://compressme.ddns.net:4000/upload';//'http://127.0.0.1:4000/upload';
+                var image_file = inp[0].files[0];
+
+                var formData = new FormData();
+                formData.append("upload", image_file);
+
+                $('.lds-grid').show();
+
+                $.ajax({
+                  url: url,
+                  type: 'POST',
+                  data: formData,
+                  async: true,
+                  cache: false,
+                  contentType: false,
+                  processData: false,
+                  success: function (status) {
+                    console.log(status);
+                    $('.lds-grid').hide();
+                    if(status != 'File extension not allowed.') {
+                        status = JSON.parse(status)
+                        let randname = status['filename']
+                        let fsize = status['size'] + 'KB'
+                        let fname = inp[0].files[0].name
+                        let ext = fname.substr(fname.lastIndexOf('.'))
+                        $('#img1').attr('src', 'static/'+randname+'_ours.png')
+                        $('#img2').attr('src', 'static/'+randname+'_compr.jpg')
+                        $('#imlabel1').text(fsize)
+                        $('#imlabel2').text(fsize)
+                        $('#img-cont').show();
+                    }
+
+                  }
+                });
+            }
+            else {
+                btn.text(file_name);
+            }
+        })
+
+});
+
+</script>
+</body>
+</html>

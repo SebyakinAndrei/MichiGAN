@@ -49,10 +49,15 @@ _MasterMessage = collections.namedtuple('_MasterMessage', ['sum', 'inv_std'])
 
 
 class _SynchronizedBatchNorm(_BatchNorm):
-    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True):
+    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True, track_running_stats=True):
         assert ReduceAddCoalesced is not None, 'Can not use Synchronized Batch Normalization without CUDA support.'
 
-        super(_SynchronizedBatchNorm, self).__init__(num_features, eps=eps, momentum=momentum, affine=affine)
+        super(_SynchronizedBatchNorm, self).__init__(num_features, eps=eps, momentum=momentum, affine=affine,
+                                                     track_running_stats=track_running_stats)
+
+        if not self.track_running_stats:
+            import warnings
+            warnings.warn('track_running_stats=False is not supported by the SynchronizedBatchNorm.')
 
         self._sync_master = SyncMaster(self._data_parallel_master)
 
@@ -205,7 +210,6 @@ class SynchronizedBatchNorm1d(_SynchronizedBatchNorm):
         if input.dim() != 2 and input.dim() != 3:
             raise ValueError('expected 2D or 3D input (got {}D input)'
                              .format(input.dim()))
-        super(SynchronizedBatchNorm1d, self)._check_input_dim(input)
 
 
 class SynchronizedBatchNorm2d(_SynchronizedBatchNorm):
@@ -268,7 +272,6 @@ class SynchronizedBatchNorm2d(_SynchronizedBatchNorm):
         if input.dim() != 4:
             raise ValueError('expected 4D input (got {}D input)'
                              .format(input.dim()))
-        super(SynchronizedBatchNorm2d, self)._check_input_dim(input)
 
 
 class SynchronizedBatchNorm3d(_SynchronizedBatchNorm):
@@ -332,7 +335,6 @@ class SynchronizedBatchNorm3d(_SynchronizedBatchNorm):
         if input.dim() != 5:
             raise ValueError('expected 5D input (got {}D input)'
                              .format(input.dim()))
-        super(SynchronizedBatchNorm3d, self)._check_input_dim(input)
 
 
 @contextlib.contextmanager
@@ -370,7 +372,7 @@ def convert_model(module):
     if isinstance(module, torch.nn.DataParallel):
         mod = module.module
         mod = convert_model(mod)
-        mod = DataParallelWithCallback(mod)
+        mod = DataParallelWithCallback(mod, device_ids=module.device_ids)
         return mod
 
     mod = module

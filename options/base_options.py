@@ -226,13 +226,15 @@ class BaseOptions():
 
         # set gpu ids
         str_ids = opt.gpu_ids.split(',')
+        print(f'str_ids: {str_ids}')
         opt.gpu_ids = []
         for str_id in str_ids:
             id = int(str_id)
             if id >= 0:
                 opt.gpu_ids.append(id)
         if len(opt.gpu_ids) > 0:
-            torch.cuda.set_device(opt.gpu_ids[0])
+            print('opt.gpu_ids[0]', opt.gpu_ids[0])
+            torch.cuda.set_device('cuda:0')
 
         assert len(opt.gpu_ids) == 0 or opt.batchSize % len(opt.gpu_ids) == 0, \
             "Batch size %d is wrong. It must be a multiple of # GPUs %d." \

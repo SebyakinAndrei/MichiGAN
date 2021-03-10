@@ -12,7 +12,10 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('--image_path', type=str, default='56000.jpg', help='Path to image')
+parser.add_argument('--image_dir', type=str, default='./datasets/backs/images/temp', help='Path to input image directory')
+parser.add_argument('--masks_dir', type=str, default='./datasets/backs/labels', help='Path to input masks directory')
 parser.add_argument('--hairmask_path',type=str, default='56000.png', help='Path to hair mask')
+
 parser.add_argument('--orientation_root', type=str, default='./', help='Root to save hair orientation map')
 
 def DoG_fn(kernel_size, channel_in, channel_out, theta):
@@ -79,15 +82,12 @@ class orient(nn.Module):
 
         return maxResTensor, confidenceTensor
 
-if __name__ == '__main__':
-    args = parser.parse_args()
-    # mkdir orientation root
-    if not os.path.exists(args.orientation_root):
-        os.mkdir(args.orientation_root)
-        
+
+def process_image(img_path, hairmask_path):
     # Get structure
-    image = Image.open(args.image_path)
-    mask = np.array(Image.open(args.hairmask_path))
+    image = Image.open(img_path)
+    hairmask_img = Image.open(hairmask_path)
+    mask = np.array(hairmask_img)[..., 0]
     if np.max(mask) > 1:
         mask = (mask > 130) * 1
     trans_image = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -108,5 +108,25 @@ if __name__ == '__main__':
     orient_tensor[orient_tensor < 0] += math.pi
     orient_np = orient_tensor.numpy().squeeze() * 255. / math.pi * mask
     orient_save = Image.fromarray(np.uint8(orient_np))
-    orient_save.save(os.path.join(args.orientation_root, args.image_path.split('/')[-1][:-4]+'.png'))
+    savepath = os.path.join(args.orientation_root, img_path.split('/')[-1][:-4] + '_orient_dense.png')
+    print(f'Saving: {savepath}')
+    orient_save.save(savepath)
+
+if __name__ == '__main__':
+    args = parser.parse_args()
+    # mkdir orientation root
+    if not os.path.exists(args.orientation_root):
+        os.mkdir(args.orientation_root)
+
+    if not os.path.exists(args.image_dir) or not os.path.exists(args.masks_dir):
+        print(f'Processing single image: {args.image_path}')
+        process_image(args.image_path, args.hairmask_path)
+    else:
+        print(f'Processing directory: {args.image_dir}')
+        for fname in os.listdir(args.image_dir):
+
+            name, ext = fname.split('.')
+            print(f'Processing {args.image_dir}/{fname}, Mask: {args.masks_dir}/{name}.png')
+            process_image(f'{args.image_dir}/{fname}', f'{args.masks_dir}/{name}.png')
+
     # cv2.imwrite(args.orientation_root, orient_tensor.numpy().squeeze() * 255. / math.pi)
