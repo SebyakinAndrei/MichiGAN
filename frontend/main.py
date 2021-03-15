@@ -5,13 +5,16 @@ import json
 
 import sys
 
-sys.path.append(os.getcwd() + '/..')
+#os.chdir('../')
+print('Working dir:', os.getcwd())
 
 from cal_orientation import process_image
 from inference import GanInference
+from face_parsing.tester import ParseNet
 
 
 gan_inference = GanInference()
+parsenet = ParseNet()
 
 
 # https://stackoverflow.com/questions/9166400/convert-rgba-png-to-rgb-with-pil
@@ -49,12 +52,12 @@ def do_upload():
     #for file in request.files:
     #    print(file)
     ref_img = request.files.get('ref-img')
-    ref_mask = request.files.get('ref-mask')
+    #ref_mask = request.files.get('ref-mask')
     target_img = request.files.get('target-img')
-    target_mask = request.files.get('target-mask')
+    #target_mask = request.files.get('target-mask')
     #print(ref_img, ref_mask, target_img, target_mask)
 
-    base_path = '../datasets/frontend_upload'
+    base_path = './datasets/frontend_upload'
 
     ref_img_path = f'{base_path}/images/{ref_img.filename}'
     target_img_path = f'{base_path}/images/{target_img.filename}'
@@ -62,17 +65,24 @@ def do_upload():
     ref_img.save(ref_img_path)
     target_img.save(target_img_path)
 
-    ref_mask_path = f'{base_path}/labels/{ref_mask.filename}'
-    target_mask_path = f'{base_path}/labels/{target_mask.filename}'
+    #ref_mask_path = f'{base_path}/labels/{ref_mask.filename}'
+    #target_mask_path = f'{base_path}/labels/{target_mask.filename}'
 
-    ref_mask.save(ref_mask_path)
-    target_mask.save(target_mask_path)
+    #ref_mask.save(ref_mask_path)
+    #target_mask.save(target_mask_path)
 
 
     orientation_root = f'{base_path}/orients'
     ref_name, target_name = ref_img.filename.split('.')[0], target_img.filename.split('.')[0]
-    process_image(Image.open(ref_img.file), Image.open(ref_mask.file), orientation_root, ref_name)
-    process_image(Image.open(target_img.file), Image.open(target_mask.file), orientation_root, target_name)
+    ref_img_img = Image.open(ref_img.file)
+    target_img_img = Image.open(target_img.file)
+    ref_mask_img, target_mask_img = parsenet.inference([ref_img_img, target_img_img])
+
+    ref_mask_img.save(f'{base_path}/labels/{ref_name}.png')
+    target_mask_img.save(f'{base_path}/labels/{target_name}.png')
+
+    process_image(ref_img_img, ref_mask_img, orientation_root, ref_name)
+    process_image(target_img_img, target_mask_img, orientation_root, target_name)
 
     gan_inference.inference(ref_name, target_name)
 
@@ -90,22 +100,22 @@ def do_upload():
 
 @route('/static/<name:path>')
 def get_img(name):
-    return static_file(name, root='../datasets/frontend_upload')
+    return static_file(name, root='./datasets/frontend_upload')
 
 
 @route('/results/<name>')
 def get_img(name):
-    return static_file(name, root='../datasets/frontend_upload/results')
+    return static_file(name, root='./datasets/frontend_upload/results')
 
 
 @route('/web/<name:path>')
 def get_img(name):
-    return static_file(name, root='./web')
+    return static_file(name, root='./frontend/web')
 
 
 @route('/')
 def index():
-    return static_file('index.html', root='./web')
+    return static_file('index.html', root='./frontend/web')
 
 if __name__ == '__main__':
     run(host='0.0.0.0', port=4000, server='tornado')

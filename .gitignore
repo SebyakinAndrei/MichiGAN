@@ -3,3 +3,6 @@ checkpoints/
 *__pycache__
 .cache/
 /frontend/.idea/
+/face_parsing/.idea/
+/face_parsing/data/
+/face_parsing/runs/

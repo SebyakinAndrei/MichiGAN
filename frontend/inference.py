@@ -14,8 +14,8 @@ class GanInference:
         self.opt.noise_background = True
         self.opt.use_ig = True
         self.opt.add_feat_zeros = True
-        self.opt.data_dir = '../datasets/frontend_upload'
-        self.opt.checkpoints_dir = '../checkpoints'
+        self.opt.data_dir = './datasets/frontend_upload'
+        self.opt.checkpoints_dir = './checkpoints'
         self.opt.gpu_ids = '0'
         self.model = Pix2PixModel(self.opt)
         self.model.eval()
