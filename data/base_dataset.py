@@ -48,14 +48,15 @@ def pad_zeros(input, pad_th):
 
 def single_inference_dataLoad(opt):
     base_dir = opt.data_dir
-    subset = opt.subset
-    label_ref_dir = base_dir + '/' + subset + '_labels/' + opt.inference_ref_name + '.png'
-    label_tag_dir = base_dir + '/' + subset + '_labels/' + opt.inference_tag_name + '.png'
-    orient_tag_dir = base_dir + '/' + subset + '_dense_orients/' + opt.inference_tag_name + '_orient_dense.png'
-    orient_ref_dir = base_dir + '/' + subset + '_dense_orients/' + opt.inference_orient_name + '_orient_dense.png'
-    orient_mask_dir = base_dir + '/' + subset + '_labels/' + opt.inference_orient_name + '.png'
-    image_ref_dir = base_dir + '/' + subset + '_images/' + opt.inference_ref_name + '.jpg'
-    image_tag_dir = base_dir + '/' + subset + '_images/' + opt.inference_tag_name + '.jpg'
+    #subset = opt.subset
+    print('opt:', opt.inference_ref_name, opt.inference_tag_name, opt.inference_orient_name)
+    label_ref_dir = base_dir + '/' + 'labels/' + opt.inference_ref_name + '.png'
+    label_tag_dir = base_dir + '/' + 'labels/' + opt.inference_tag_name + '.png'
+    orient_tag_dir = base_dir + '/' + 'orients/' + opt.inference_tag_name + '_orient_dense.png'
+    orient_ref_dir = base_dir + '/' + 'orients/' + opt.inference_orient_name + '_orient_dense.png'
+    orient_mask_dir = base_dir + '/' + 'labels/' + opt.inference_orient_name + '.png'
+    image_ref_dir = base_dir + '/' + 'images/' + opt.inference_ref_name + '.jpg'
+    image_tag_dir = base_dir + '/' + 'images/' + opt.inference_tag_name + '.jpg'
 
     label_ref = Image.open(label_ref_dir)
     label_tag = Image.open(label_tag_dir)

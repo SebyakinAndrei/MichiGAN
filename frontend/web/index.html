@@ -24,21 +24,23 @@
 	<label class="file_upload">
         <span class="button">Choose</span>
         <mark>Reference mask is not chosen</mark>
-        <input id="mask-img" type="file">
+        <input id="ref-mask" type="file">
     </label>
 	<label class="file_upload">
         <span class="button">Choose</span>
         <mark>Target image is not chosen</mark>
-        <input id="mask-img" type="file">
+        <input id="target-img" type="file">
     </label>
 	<label class="file_upload">
         <span class="button">Choose</span>
         <mark>Target mask is not chosen</mark>
-        <input id="mask-img" type="file">
+        <input id="target-mask" type="file">
     </label>
 	<button class="file_upload">Process</button>
 	<p style="text-align: center;">
-		<img src="web/img/4_3_1.jpg"/>
+		<img id="ref-img-img" src=""/>
+		<img id="target-img-img" src=""/>
+		<img id="result-img" src=""/>
 	</p>
     <div id="img-cont" style="text-align: center; padding: 20px;">
         <figure class="cd-image-container">
@@ -70,84 +72,7 @@
     </div>
 <script src="web/js/jquery-2.1.1.js"></script>
 <script src="web/js/jquery.mobile.custom.min.js"></script> <!-- Resource jQuery -->
-<script src="web/js/main.js"></script> <!-- Resource jQuery -->
-<script>
-    $(function() {
-        $('#img-cont').hide();
-        $('.lds-grid').hide();
-        var wrapper = $(".file_upload"),
-            inp = wrapper.find("input"),
-            btn = wrapper.find(".button"),
-            lbl = wrapper.find("mark");
-
-		let mask_image =
-
-        // Crutches for the :focus style:
-        inp.focus(function(){
-            wrapper.addClass( "focus" );
-        }).blur(function(){
-            wrapper.removeClass( "focus" );
-        });
-
-        inp.change(function(){
-            var file_name;
-            if(inp[0].files[0] ) {
-                file_name = inp[0].files[0].name;
-            }
-			else {
-				propmt('Something bad happened to input')
-			}
-
-            if(!file_name.length )
-                return;
-
-            if(lbl.is( ":visible")){
-                lbl.text(file_name);
-                btn.text("Выбрать");
-                console.log('OK1');
-
-                var url = 'http://127.0.0.1:4000/upload';//'http://compressme.ddns.net:4000/upload';//'http://127.0.0.1:4000/upload';
-                var image_file = inp[0].files[0];
-
-                var formData = new FormData();
-                formData.append("upload", image_file);
-
-                $('.lds-grid').show();
-
-                $.ajax({
-                  url: url,
-                  type: 'POST',
-                  data: formData,
-                  async: true,
-                  cache: false,
-                  contentType: false,
-                  processData: false,
-                  success: function (status) {
-                    console.log(status);
-                    $('.lds-grid').hide();
-                    if(status != 'File extension not allowed.') {
-                        status = JSON.parse(status)
-                        let randname = status['filename']
-                        let fsize = status['size'] + 'KB'
-                        let fname = inp[0].files[0].name
-                        let ext = fname.substr(fname.lastIndexOf('.'))
-                        $('#img1').attr('src', 'static/'+randname+'_ours.png')
-                        $('#img2').attr('src', 'static/'+randname+'_compr.jpg')
-                        $('#imlabel1').text(fsize)
-                        $('#imlabel2').text(fsize)
-                        $('#img-cont').show();
-                    }
-
-                  }
-                });
-            }
-            else {
-                btn.text(file_name);
-            }
-        })
-
-});
-
-</script>
+<!-- <script src="web/js/main.js"></script> --> <!-- Resource jQuery -->
+<script src="web/js/index.js"></script>
 </body>
 </html>

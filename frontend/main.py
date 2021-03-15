@@ -1,8 +1,17 @@
 from bottle import *
-#from compression import compress, process_image
 from PIL import Image
 from random import randrange
 import json
+
+import sys
+
+sys.path.append(os.getcwd() + '/..')
+
+from cal_orientation import process_image
+from inference import GanInference
+
+
+gan_inference = GanInference()
 
 
 # https://stackoverflow.com/questions/9166400/convert-rgba-png-to-rgb-with-pil
@@ -37,28 +46,56 @@ def enable_cors():
 
 @route('/upload', method='POST')
 def do_upload():
-    upload = request.files.get('upload')
-    name, ext = os.path.splitext(upload.filename)
-    if ext not in ('.png', '.jpg', '.jpeg'):
-        return 'File extension not allowed.'
-    randname = '%030x' % randrange(16**30)
-    upload.save('temp/'+randname+ext)
+    #for file in request.files:
+    #    print(file)
+    ref_img = request.files.get('ref-img')
+    ref_mask = request.files.get('ref-mask')
+    target_img = request.files.get('target-img')
+    target_mask = request.files.get('target-mask')
+    #print(ref_img, ref_mask, target_img, target_mask)
 
-    img = Image.open(upload.file)
-    compressed, imsize = None, 0
+    base_path = '../datasets/frontend_upload'
+
+    ref_img_path = f'{base_path}/images/{ref_img.filename}'
+    target_img_path = f'{base_path}/images/{target_img.filename}'
+
+    ref_img.save(ref_img_path)
+    target_img.save(target_img_path)
+
+    ref_mask_path = f'{base_path}/labels/{ref_mask.filename}'
+    target_mask_path = f'{base_path}/labels/{target_mask.filename}'
+
+    ref_mask.save(ref_mask_path)
+    target_mask.save(target_mask_path)
+
+
+    orientation_root = f'{base_path}/orients'
+    ref_name, target_name = ref_img.filename.split('.')[0], target_img.filename.split('.')[0]
+    process_image(Image.open(ref_img.file), Image.open(ref_mask.file), orientation_root, ref_name)
+    process_image(Image.open(target_img.file), Image.open(target_mask.file), orientation_root, target_name)
+
+    gan_inference.inference(ref_name, target_name)
+
+    #img = Image.open(upload.file)
+    #compressed, imsize = None, 0
     #try:
     #    compressed, imsize = compress(img, bpp=0.2)
     #except:
     #    compressed, imsize = compress(pure_pil_alpha_to_color_v2(img), bpp=0.2)
-    with open('temp/'+randname+'_compr.jpg', 'wb') as out_f:
-        out_f.write(compressed.getbuffer())
+    #with open('temp/'+randname+'_compr.jpg', 'wb') as out_f:
+    #    out_f.write(compressed.getbuffer())
     #process_image('temp/'+randname+ext, randname)
-    return json.dumps({'filename': randname, 'size': '{:.1f}'.format(imsize/1024)})
+    return json.dumps({'status': 'ok', 'result': f'{target_name}.jpg'})
 
 
-@route('/static/<name>')
+@route('/static/<name:path>')
 def get_img(name):
-    return static_file(name, root='./temp')
+    return static_file(name, root='../datasets/frontend_upload')
+
+
+@route('/results/<name>')
+def get_img(name):
+    return static_file(name, root='../datasets/frontend_upload/results')
 
 
 @route('/web/<name:path>')

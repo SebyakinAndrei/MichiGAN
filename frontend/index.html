@@ -45,23 +45,23 @@
     </form>
 
 
-    
+
     <figure class="cd-image-container">
        <img src="static/40fc255c0dedee98a62da5b30cebf0.jpg" alt="Original Image">
        <span class="cd-image-label" data-type="original">Original</span>
-      
+
        <div class="cd-resize-img"> <!-- the resizable image on top -->
           <img src="static/40fc255c0dedee98a62da5b30cebf0_compr.jpg" alt="Modified Image">
           <span class="cd-image-label" data-type="modified">Modified</span>
        </div>
-      
+
        <span class="cd-handle"></span> <!-- slider handle -->
     </figure>
     <script>
         jQuery(document).ready(function($){
            //function to check if the .cd-image-container is in the viewport here
            // ...
-            
+
            //make the .cd-handle element draggable and modify .cd-resize-img width according to its position
            $('.cd-image-container').each(function(){
               var actual = $(this);
@@ -84,10 +84,10 @@
                   containerWidth = container.outerWidth(),
                   minLeft = containerOffset + 10,
                   maxLeft = containerOffset + containerWidth - dragWidth - 10;
-                
+
               dragElement.parents().on("mousemove vmousemove", function(e) {
                  leftValue = e.pageX + xPosition - dragWidth;
-                    
+
                  //constrain the draggable element to move inside its container
                  if(leftValue < minLeft ) {
                     leftValue = minLeft;
@@ -102,7 +102,7 @@
                     resizeElement.removeClass('resizable');
                  });
 
-                 $('.resizable').css('width', widthValue); 
+                 $('.resizable').css('width', widthValue);
 
                  //function to upadate images label visibility here
                  // ...
@@ -125,7 +125,7 @@
 
             event.preventDefault();
 
-            var url  = 'http://localhost:8000/upload';
+            var url  = 'http://localhost:4000/upload';
             var image_file = $('#image_file').get(0).files[0];
 
             var formData = new FormData();
@@ -149,7 +149,7 @@
                     $('.img-comp-slider').remove();
                     initComparisons();
                     $('body').append('<div id="init"></div>');
-                    $('.img-comp-container').removeAttr('style');     
+                    $('.img-comp-container').removeAttr('style');
                     //$('.img-comp-container').show();
                 }
               }

@@ -10,14 +10,6 @@ import os
 import cv2
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument('--image_path', type=str, default='56000.jpg', help='Path to image')
-parser.add_argument('--image_dir', type=str, default='./datasets/backs/images/temp', help='Path to input image directory')
-parser.add_argument('--masks_dir', type=str, default='./datasets/backs/labels', help='Path to input masks directory')
-parser.add_argument('--hairmask_path',type=str, default='56000.png', help='Path to hair mask')
-
-parser.add_argument('--orientation_root', type=str, default='./', help='Root to save hair orientation map')
-
 def DoG_fn(kernel_size, channel_in, channel_out, theta):
     # params
     sigma_h = nn.Parameter(torch.ones(channel_out) * 1.0, requires_grad=False)
@@ -83,7 +75,7 @@ class orient(nn.Module):
         return maxResTensor, confidenceTensor
 
 
-def process_image(img_path, hairmask_path):
+def process_image_from_disk(img_path, hairmask_path, orientation_root):
     # Get structure
     image = Image.open(img_path)
     hairmask_img = Image.open(hairmask_path)
@@ -108,11 +100,48 @@ def process_image(img_path, hairmask_path):
     orient_tensor[orient_tensor < 0] += math.pi
     orient_np = orient_tensor.numpy().squeeze() * 255. / math.pi * mask
     orient_save = Image.fromarray(np.uint8(orient_np))
-    savepath = os.path.join(args.orientation_root, img_path.split('/')[-1][:-4] + '_orient_dense.png')
+    savepath = os.path.join(orientation_root, img_path.split('/')[-1][:-4] + '_orient_dense.png')
     print(f'Saving: {savepath}')
     orient_save.save(savepath)
 
+
+def process_image(image, hairmask_img, orientation_root, name):
+    mask = np.array(hairmask_img)
+    if np.max(mask) > 1:
+        mask = (mask > 130) * 1
+    trans_image = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    image_tensor = trans_image(image)
+    image_tensor = torch.unsqueeze(image_tensor, 0)
+    cal_orient = orient()
+    fake_image = (image_tensor + 1) / 2.0 * 255
+    gray = 0.299 * fake_image[:, 0, :, :] + 0.587 * fake_image[:, 1, :, :] + 0.144 * fake_image[:, 2, :, :]
+    gray = torch.unsqueeze(gray, 1)
+    orient_tensor, confidence_tensor = cal_orient.calOrientation(gray)
+    orient_tensor = orient_tensor * math.pi / 31 * 2
+    mask_tensor = torch.from_numpy(mask).float()
+    flow_x = torch.cos(orient_tensor) * confidence_tensor * mask_tensor
+    flow_y = torch.sin(orient_tensor) * confidence_tensor * mask_tensor
+    flow_x = torch.from_numpy(cv2.GaussianBlur(flow_x.numpy().squeeze(), (0, 0), 4))
+    flow_y = torch.from_numpy(cv2.GaussianBlur(flow_y.numpy().squeeze(), (0, 0), 4))
+    orient_tensor = torch.atan2(flow_y, flow_x) * 0.5
+    orient_tensor[orient_tensor < 0] += math.pi
+    orient_np = orient_tensor.numpy().squeeze() * 255. / math.pi * mask
+    orient_save = Image.fromarray(np.uint8(orient_np))
+    savepath = os.path.join(orientation_root, name + '_orient_dense.png')
+    print(f'Saving: {savepath}')
+    orient_save.save(savepath)
+
+
 if __name__ == '__main__':
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--image_path', type=str, default='56000.jpg', help='Path to image')
+    parser.add_argument('--image_dir', type=str, default='./datasets/backs/images/temp',
+                        help='Path to input image directory')
+    parser.add_argument('--masks_dir', type=str, default='./datasets/backs/labels',
+                        help='Path to input masks directory')
+    parser.add_argument('--hairmask_path', type=str, default='56000.png', help='Path to hair mask')
+
+    parser.add_argument('--orientation_root', type=str, default='./', help='Root to save hair orientation map')
     args = parser.parse_args()
     # mkdir orientation root
     if not os.path.exists(args.orientation_root):
