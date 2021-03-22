@@ -51,9 +51,9 @@ $(function() {
             $('.lds-grid').hide();
             status = JSON.parse(status)
                 let res_name = status['result']
-                $('#ref-img-img').attr('src', 'static/images/'+ref_name)
-                $('#target-img-img').attr('src', 'static/images/'+res_name)
-                $('#result-img').attr('src', 'static/results/'+res_name)
+                $('#ref-img-img').attr('src', `results/${res_name}_ref.jpg`)
+                $('#target-img-img').attr('src', `results/${res_name}_target.jpg`)
+                $('#result-img').attr('src', `results/${res_name}_result.jpg`)
                 //$('#img2').attr('src', 'static/'+randname)
                 //$('#imlabel1').text(fsize)
                 //$//('#imlabel2').text(fsize)

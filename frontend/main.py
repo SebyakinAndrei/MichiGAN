@@ -2,6 +2,7 @@ from bottle import *
 from PIL import Image
 from random import randrange
 import json
+import secrets
 
 import sys
 
@@ -86,6 +87,11 @@ def do_upload():
 
     gan_inference.inference(ref_name, target_name)
 
+    rand_name = secrets.token_hex(15)
+    os.rename(ref_img_path, f'{base_path}/temp/{rand_name}_ref.jpg')
+    os.rename(target_img_path, f'{base_path}/temp/{rand_name}_target.jpg')
+    os.rename(f'{base_path}/results/{target_name}.jpg', f'{base_path}/temp/{rand_name}_result.jpg')
+
     #img = Image.open(upload.file)
     #compressed, imsize = None, 0
     #try:
@@ -95,7 +101,7 @@ def do_upload():
     #with open('temp/'+randname+'_compr.jpg', 'wb') as out_f:
     #    out_f.write(compressed.getbuffer())
     #process_image('temp/'+randname+ext, randname)
-    return json.dumps({'status': 'ok', 'result': f'{target_name}.jpg'})
+    return json.dumps({'status': 'ok', 'result': f'{rand_name}'})
 
 
 @route('/static/<name:path>')
@@ -103,9 +109,9 @@ def get_img(name):
     return static_file(name, root='./datasets/frontend_upload')
 
 
-@route('/results/<name>')
+@route('/results/<name:path>')
 def get_img(name):
-    return static_file(name, root='./datasets/frontend_upload/results')
+    return static_file(name, root='./datasets/frontend_upload/temp')
 
 
 @route('/web/<name:path>')
